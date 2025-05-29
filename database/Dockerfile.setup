@@ -1,0 +1,57 @@
+# Database Setup Container
+# Immagine lightweight per setup e manutenzione database
+FROM python:3.11-slim
+
+LABEL maintainer="IoT Industrial Team"
+LABEL description="Database setup and maintenance container"
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy database scripts
+COPY setup_database.py .
+COPY validate_data.py .
+COPY schema.json .
+COPY sample_queries.flux .
+
+# Make scripts executable
+RUN chmod +x setup_database.py validate_data.py
+
+# Environment variables with defaults
+ENV INFLUXDB_URL=http://influxdb:8086
+ENV INFLUXDB_TOKEN=factory-token-2024
+ENV INFLUXDB_ORG=factory
+ENV INFLUXDB_BUCKET=industrial_data
+
+# Health check script
+COPY <<EOF /app/health_check.sh
+#!/bin/bash
+python -c "
+import requests
+import sys
+try:
+    response = requests.get('$INFLUXDB_URL/health', timeout=5)
+    sys.exit(0 if response.status_code == 200 else 1)
+except:
+    sys.exit(1)
+"
+EOF
+
+RUN chmod +x /app/health_check.sh
+
+# Default command runs setup
+CMD ["python", "setup_database.py"]
+
+# Alternative commands:
+# docker run --rm setup-db python validate_data.py
+# docker run --rm setup-db /bin/bash

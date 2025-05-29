@@ -1,0 +1,300 @@
+{
+  "database_schema": {
+    "version": "1.0",
+    "created": "2025-05-29",
+    "description": "Schema InfluxDB per sistema IoT Industriale",
+    "buckets": {
+      "industrial_data": {
+        "retention": "7d",
+        "description": "Dati principali sistema produttivo",
+        "measurements": {
+          "sensor_data": {
+            "description": "Dati sensori continui (ogni 3 secondi)",
+            "tags": {
+              "machine": {
+                "type": "string",
+                "values": ["Milling1", "Milling2", "Lathe1", "Saw1"],
+                "description": "Nome macchina"
+              },
+              "machine_type": {
+                "type": "string",
+                "values": ["Milling", "Lathe", "Saw"],
+                "description": "Tipo macchina"
+              },
+              "location": {
+                "type": "string",
+                "values": ["workshop_A", "workshop_B"],
+                "description": "Ubicazione fisica"
+              },
+              "shift": {
+                "type": "string",
+                "values": ["morning", "afternoon", "night"],
+                "description": "Turno di lavoro"
+              }
+            },
+            "fields": {
+              "temperature": {
+                "type": "float",
+                "unit": "°C",
+                "range": "20-100",
+                "description": "Temperatura macchina"
+              },
+              "power": {
+                "type": "float",
+                "unit": "kW",
+                "range": "0-10",
+                "description": "Potenza consumata"
+              },
+              "rpm_spindle": {
+                "type": "float",
+                "unit": "rpm",
+                "range": "1000-4000",
+                "machines": ["Milling", "Lathe"],
+                "description": "Velocità mandrino"
+              },
+              "feed_rate": {
+                "type": "float",
+                "unit": "mm/min",
+                "range": "200-400",
+                "machines": ["Milling"],
+                "description": "Velocità avanzamento"
+              },
+              "vibration_level": {
+                "type": "float",
+                "unit": "g",
+                "range": "0-5",
+                "machines": ["Milling"],
+                "description": "Livello vibrazioni"
+              },
+              "cut_depth": {
+                "type": "float",
+                "unit": "mm",
+                "range": "0.5-5.0",
+                "machines": ["Lathe"],
+                "description": "Profondità taglio"
+              },
+              "blade_speed": {
+                "type": "float",
+                "unit": "rpm",
+                "range": "1500-2500",
+                "machines": ["Saw"],
+                "description": "Velocità lama"
+              },
+              "material_feed": {
+                "type": "float",
+                "unit": "m/min",
+                "range": "0.5-2.0",
+                "machines": ["Saw"],
+                "description": "Velocità avanzamento materiale"
+              }
+            }
+          },
+          "machine_events": {
+            "description": "Eventi discreti macchine",
+            "tags": {
+              "machine": {
+                "type": "string",
+                "values": ["Milling1", "Milling2", "Lathe1", "Saw1"],
+                "description": "Nome macchina"
+              },
+              "event_type": {
+                "type": "string",
+                "values": [
+                  "setup_start",
+                  "setup_end",
+                  "processing_start",
+                  "processing_end"
+                ],
+                "description": "Tipo evento"
+              },
+              "piece_id": {
+                "type": "string",
+                "pattern": "PZ[0-9]{3}",
+                "example": "PZ001",
+                "description": "ID pezzo in lavorazione"
+              },
+              "tool": {
+                "type": "string",
+                "values": ["TM10", "TM25", "TM12", "TM30", "TL05", "TL08"],
+                "description": "Utensile utilizzato"
+              }
+            },
+            "fields": {
+              "duration": {
+                "type": "float",
+                "unit": "minutes",
+                "description": "Durata evento (0 per start events)"
+              },
+              "status": {
+                "type": "string",
+                "values": ["active", "completed", "error"],
+                "description": "Stato operazione"
+              },
+              "tool_wear": {
+                "type": "float",
+                "range": "0.0-1.0",
+                "description": "Livello usura utensile"
+              },
+              "cycle_time": {
+                "type": "float",
+                "unit": "minutes",
+                "description": "Tempo ciclo completo"
+              }
+            }
+          },
+          "piece_tracking": {
+            "description": "Tracciamento movimento pezzi",
+            "tags": {
+              "piece_id": {
+                "type": "string",
+                "pattern": "PZ[0-9]{3}",
+                "example": "PZ001",
+                "description": "ID pezzo"
+              },
+              "event_type": {
+                "type": "string",
+                "values": ["move_start", "move_end", "deposit"],
+                "description": "Tipo movimento"
+              },
+              "from_station": {
+                "type": "string",
+                "values": [
+                  "Warehouse",
+                  "Saw1",
+                  "Milling1",
+                  "Milling2",
+                  "Lathe1"
+                ],
+                "description": "Stazione partenza"
+              },
+              "to_station": {
+                "type": "string",
+                "values": [
+                  "Warehouse",
+                  "Saw1",
+                  "Milling1",
+                  "Milling2",
+                  "Lathe1"
+                ],
+                "description": "Stazione destinazione"
+              },
+              "material": {
+                "type": "string",
+                "values": ["steel", "alu"],
+                "description": "Tipo materiale"
+              }
+            },
+            "fields": {
+              "duration": {
+                "type": "float",
+                "unit": "minutes",
+                "description": "Durata trasporto"
+              },
+              "distance": {
+                "type": "float",
+                "unit": "meters",
+                "description": "Distanza percorsa"
+              },
+              "operator": {
+                "type": "string",
+                "description": "Operatore responsabile"
+              },
+              "priority": {
+                "type": "int",
+                "range": "1-5",
+                "description": "Priorità lavorazione"
+              }
+            }
+          },
+          "system_tracking": {
+            "description": "System resource monitoring (every 30 seconds)",
+            "tags": {
+              "component": {
+                "type": "string",
+                "values": ["event_processor", "mqtt_broker", "database"],
+                "description": "System component"
+              },
+              "metric_type": {
+                "type": "string",
+                "values": ["system_resources", "health", "error"],
+                "description": "Type of metric"
+              },
+              "severity": {
+                "type": "string",
+                "values": ["info", "warning", "error"],
+                "description": "Severity level"
+              }
+            },
+            "fields": {
+              "cpu": {
+                "type": "float",
+                "unit": "%",
+                "range": "0-100",
+                "description": "CPU usage percentage"
+              },
+              "free_memory": {
+                "type": "float",
+                "unit": "GB",
+                "description": "Available memory in GB"
+              },
+              "ram": {
+                "type": "float",
+                "unit": "GB",
+                "description": "Total RAM in GB"
+              },
+              "errors": {
+                "type": "int",
+                "description": "System error count"
+              },
+              "memory_used_percent": {
+                "type": "float",
+                "unit": "%",
+                "description": "Memory usage percentage"
+              },
+              "uptime_seconds": {
+                "type": "float",
+                "unit": "seconds",
+                "description": "System uptime"
+              }
+            }
+          }
+        }
+      },
+      "historical_data": {
+        "retention": "365d",
+        "description": "Dati aggregati storici",
+        "measurements": {
+          "sensor_data_1h": {
+            "description": "Media oraria dati sensori",
+            "derived_from": "sensor_data"
+          },
+          "machine_efficiency_1h": {
+            "description": "Efficienza oraria macchine",
+            "derived_from": "machine_events"
+          }
+        }
+      },
+      "alerts": {
+        "retention": "30d",
+        "description": "Allarmi e anomalie",
+        "measurements": {
+          "temperature_alerts": {
+            "description": "Allarmi temperatura"
+          },
+          "vibration_alerts": {
+            "description": "Allarmi vibrazioni"
+          },
+          "system_alerts": {
+            "description": "Allarmi sistema"
+          }
+        }
+      }
+    },
+    "sample_queries": {
+      "real_time_temperature": "from(bucket:\"industrial_data\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"sensor_data\") |> filter(fn: (r) => r._field == \"temperature\")",
+      "machine_efficiency": "from(bucket:\"industrial_data\") |> range(start: -24h) |> filter(fn: (r) => r._measurement == \"machine_events\") |> filter(fn: (r) => r.event_type =~ /processing/) |> group(columns: [\"machine\"]) |> sum()",
+      "anomaly_detection": "from(bucket:\"industrial_data\") |> range(start: -1h) |> filter(fn: (r) => r._measurement == \"sensor_data\") |> filter(fn: (r) => r._field == \"temperature\") |> filter(fn: (r) => r._value > 80.0)",
+      "piece_traceability": "from(bucket:\"industrial_data\") |> range(start: -24h) |> filter(fn: (r) => r._measurement == \"piece_tracking\") |> filter(fn: (r) => r.piece_id == \"PZ001\") |> sort(columns: [\"_time\"])"
+    }
+  }
+}

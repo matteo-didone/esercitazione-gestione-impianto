@@ -1,0 +1,26 @@
+# MQTT Client
+paho-mqtt==1.6.1
+
+# InfluxDB Client  
+influxdb-client[ciso]==1.38.0
+
+# Async support
+asyncio-mqtt==0.16.1
+
+# System monitoring (for System_Tracking schema compliance)
+psutil>=5.9.0
+
+# Core dependencies
+requests>=2.31.0
+python-dateutil>=2.8.2
+aiohttp>=3.8.0
+
+# Logging and monitoring
+structlog>=23.1.0
+
+# Optional: For enhanced JSON processing
+orjson>=3.9.0
+
+# Development dependencies (optional)
+# pytest>=7.4.0
+# pytest-asyncio>=0.21.0
