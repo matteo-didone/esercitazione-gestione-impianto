@@ -137,7 +137,7 @@ Dashboard web con **6 pannelli principali**:
 ### Avvio Rapido
 ```bash
 # 1. Clona repository
-git clone <repo-url>
+git clone https://github.com/matteo-didone/esercitazione-gestione-impianto
 cd esercitazione-gestione-impianto
 
 # 2. Avvia tutti i servizi
