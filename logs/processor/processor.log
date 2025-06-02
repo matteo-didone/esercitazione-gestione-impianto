@@ -7764,3 +7764,7 @@
 2025-06-02 11:24:44,374 - src.influx_writer - INFO - ✅ Flushed 1 points to InfluxDB
 2025-06-02 11:29:41,306 - __main__ - INFO - 📊 Stats: 5725 processed, 0 errors, 0.0 msg/sec
 2025-06-02 11:29:44,684 - src.influx_writer - INFO - ✅ Flushed 1 points to InfluxDB
+2025-06-02 11:34:41,544 - __main__ - INFO - 📊 Stats: 5725 processed, 0 errors, 0.0 msg/sec
+2025-06-02 11:34:44,966 - src.influx_writer - INFO - ✅ Flushed 1 points to InfluxDB
+2025-06-02 11:39:40,871 - __main__ - INFO - 📊 Stats: 5725 processed, 0 errors, 0.0 msg/sec
+2025-06-02 11:39:45,276 - src.influx_writer - INFO - ✅ Flushed 1 points to InfluxDB
