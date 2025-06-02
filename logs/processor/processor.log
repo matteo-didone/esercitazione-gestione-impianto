@@ -7768,3 +7768,21 @@
 2025-06-02 11:34:44,966 - src.influx_writer - INFO - ✅ Flushed 1 points to InfluxDB
 2025-06-02 11:39:40,871 - __main__ - INFO - 📊 Stats: 5725 processed, 0 errors, 0.0 msg/sec
 2025-06-02 11:39:45,276 - src.influx_writer - INFO - ✅ Flushed 1 points to InfluxDB
+2025-06-02 11:44:41,339 - __main__ - INFO - 📊 Stats: 5725 processed, 0 errors, 0.0 msg/sec
+2025-06-02 11:44:45,576 - src.influx_writer - INFO - ✅ Flushed 1 points to InfluxDB
+2025-06-02 11:46:57,276 - __main__ - INFO - 🛑 Received signal 15
+2025-06-02 11:46:57,984 - __main__ - INFO - 🛑 Stop signal received
+2025-06-02 11:46:57,985 - __main__ - INFO - 🛑 Shutting down Event Processor...
+2025-06-02 11:46:57,986 - src.mqtt_client - INFO - 🛑 Stopping MQTT client...
+2025-06-02 11:46:57,990 - src.mqtt_client - INFO - 🔌 MQTT client disconnected
+2025-06-02 11:46:57,992 - src.mqtt_client - INFO - ✅ MQTT client stopped
+2025-06-02 11:46:57,992 - __main__ - INFO - ✅ MQTT client disconnected
+2025-06-02 11:46:58,004 - src.influx_writer - INFO - ✅ InfluxDB connection closed
+2025-06-02 11:46:58,004 - __main__ - INFO - ✅ InfluxDB connection closed
+2025-06-02 11:46:58,004 - __main__ - INFO - 🛑 Shutting down Event Processor...
+2025-06-02 11:46:58,004 - src.mqtt_client - INFO - 🛑 Stopping MQTT client...
+2025-06-02 11:46:58,005 - src.mqtt_client - INFO - ✅ MQTT client stopped
+2025-06-02 11:46:58,005 - __main__ - INFO - ✅ MQTT client disconnected
+2025-06-02 11:46:58,005 - src.influx_writer - INFO - ✅ InfluxDB connection closed
+2025-06-02 11:46:58,005 - __main__ - INFO - ✅ InfluxDB connection closed
+2025-06-02 11:46:58,006 - __main__ - INFO - 👋 Event Processor stopped

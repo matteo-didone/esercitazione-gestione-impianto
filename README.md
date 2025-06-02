@@ -199,16 +199,3 @@ python database/validate_data.py
 | **Filtri** | Macchina, tempo, soglie | ✅ |
 | **Simulatore avanzato** | 4 macchine, modelli fisici | ✅ |
 | **Processori opzionali** | Anomaly detection, predictive maintenance | ✅ |
-
-## 🎯 Demo (5 minuti)
-
-1. **[1 min]** Mostra architettura: `docker-compose ps`
-2. **[2 min]** Avvia simulazione: `docker-compose up simulator`
-3. **[1.5 min]** Dashboard live: http://localhost:3000
-4. **[0.5 min]** Anomaly detection: temperatura > 80°C trigger alert
-
-**Punti forti da evidenziare:**
-- Sistema end-to-end completo e funzionante
-- Anomaly detection automatico
-- Dashboard professionale
-- Codice production-ready con Docker
