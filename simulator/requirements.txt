@@ -1,0 +1,8 @@
+# MQTT Client
+paho-mqtt==1.6.1
+
+# Numerical computing
+numpy>=1.24.0
+
+# Core dependencies
+python-dateutil>=2.8.2

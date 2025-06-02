@@ -63,7 +63,6 @@ services:
       - GF_SECURITY_ALLOW_EMBEDDING=true
     volumes:
       - impianto_grafana_data:/var/lib/grafana
-      # Corrected paths to match your structure
       - ./dashboard/provisioning:/etc/grafana/provisioning:ro
       - ./dashboard/dashboards:/var/lib/grafana/dashboards:ro
     depends_on:
@@ -82,7 +81,7 @@ services:
   # Event Processor - Python Service
   event-processor:
     build:
-      context: ./mqtt-processor  # Corrected path
+      context: ./mqtt-processor
       dockerfile: Dockerfile
     container_name: gestione-impianto-processor
     environment:
@@ -109,6 +108,29 @@ services:
     restart: unless-stopped
     volumes:
       - ./logs/processor:/app/logs
+    networks:
+      - impianto-network
+
+  # Simulator Service
+  simulator:
+    build:
+      context: ./simulator
+      dockerfile: Dockerfile
+    container_name: gestione-impianto-simulator
+    environment:
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - TIME_MULTIPLIER=10
+      - PIECE_COUNT=5
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      mosquitto:
+        condition: service_healthy
+      event-processor:
+        condition: service_started
+    restart: "no"  # Run once and stop
+    volumes:
+      - ./logs/simulator:/app/logs
     networks:
       - impianto-network
 

@@ -110,7 +110,7 @@
             "type": "influxdb",
             "uid": "${DS_INFLUXDB-INDUSTRIAL}"
           },
-          "query": "from(bucket: \"industrial_data\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"sensor_data\")\n  |> filter(fn: (r) => r[\"_field\"] == \"temperature\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+          "query": "from(bucket: \"industrial_data\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"sensor_data\")\n  |> filter(fn: (r) => r[\"_field\"] == \"temperature\")\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)",
           "refId": "A"
         }
       ],
@@ -205,7 +205,7 @@
             "type": "influxdb",
             "uid": "${DS_INFLUXDB-INDUSTRIAL}"
           },
-          "query": "from(bucket: \"industrial_data\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"sensor_data\")\n  |> filter(fn: (r) => r[\"_field\"] == \"power\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+          "query": "from(bucket: \"industrial_data\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"sensor_data\")\n  |> filter(fn: (r) => r[\"_field\"] == \"power\")\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)",
           "refId": "A"
         }
       ],
@@ -266,7 +266,7 @@
             "type": "influxdb",
             "uid": "${DS_INFLUXDB-INDUSTRIAL}"
           },
-          "query": "from(bucket: \"industrial_data\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"machine_events\")\n  |> filter(fn: (r) => r[\"event_type\"] == \"processing_end\")\n  |> count()\n  |> yield(name: \"count\")",
+          "query": "from(bucket: \"industrial_data\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"machine_events\")\n  |> filter(fn: (r) => r[\"event_type\"] == \"processing_end\")\n  |> count()",
           "refId": "A"
         }
       ],
@@ -331,7 +331,7 @@
             "type": "influxdb",
             "uid": "${DS_INFLUXDB-INDUSTRIAL}"
           },
-          "query": "from(bucket: \"alerts\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"severity\"] == \"critical\")\n  |> count()\n  |> yield(name: \"count\")",
+          "query": "from(bucket: \"alerts\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r[\"severity\"] == \"critical\")\n  |> count()",
           "refId": "A"
         }
       ],
@@ -438,7 +438,7 @@
             "type": "influxdb",
             "uid": "${DS_INFLUXDB-INDUSTRIAL}"
           },
-          "query": "from(bucket: \"alerts\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_field\"] == \"message\")\n  |> sort(columns: [\"_time\"], desc: true)\n  |> limit(n: 20)\n  |> keep(columns: [\"_time\", \"machine\", \"severity\", \"_value\"])\n  |> rename(columns: {_value: \"message\"})",
+          "query": "from(bucket: \"alerts\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r[\"_field\"] == \"message\")\n  |> sort(columns: [\"_time\"], desc: true)\n  |> limit(n: 20)\n  |> keep(columns: [\"_time\", \"machine\", \"severity\", \"_value\"])\n  |> rename(columns: {_value: \"message\"})",
           "refId": "A"
         }
       ],
@@ -529,7 +529,7 @@
             "type": "influxdb",
             "uid": "${DS_INFLUXDB-INDUSTRIAL}"
           },
-          "query": "from(bucket: \"industrial_data\")\n  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"system_tracking\")\n  |> filter(fn: (r) => r[\"_field\"] == \"cpu\" or r[\"_field\"] == \"memory_used_percent\")\n  |> aggregateWindow(every: v.windowPeriod, fn: mean, createEmpty: false)\n  |> yield(name: \"mean\")",
+          "query": "from(bucket: \"industrial_data\")\n  |> range(start: -1h)\n  |> filter(fn: (r) => r[\"_measurement\"] == \"system_tracking\")\n  |> filter(fn: (r) => r[\"_field\"] == \"cpu\" or r[\"_field\"] == \"memory_used_percent\")\n  |> aggregateWindow(every: 30s, fn: mean, createEmpty: false)",
           "refId": "A"
         }
       ],

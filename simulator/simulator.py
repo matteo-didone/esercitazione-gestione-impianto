@@ -1,12 +1,13 @@
 import time
 import random
 import threading
+import os
 from datetime import datetime, timedelta
 import numpy as np
 import paho.mqtt.client as mqtt
 import json
 
-# Simulation parameters
+# Simulation parameters from environment
 DATA_SEND_INTERVAL = 3  # seconds between payloads (simulated)
 NOMINAL_CYCLE_MIN = 10  # average processing time (minutes)
 SIGMA_CYCLE_MIN = 1.5   # standard deviation (minutes)
@@ -20,7 +21,7 @@ DIST_MIN = {
 DEFAULT_MOVE_MIN = 2
 
 # Factory clock
-simulation_current_time = datetime(2025, 4, 28, 8, 0)
+simulation_current_time = datetime.now()
 
 
 def get_transport_time(from_station: str, to_station: str) -> float:
@@ -60,7 +61,18 @@ class MQTTClient:
             print(f"🔌 Connecting to MQTT broker {broker_address}:{broker_port}...")
             self.client.connect(broker_address, broker_port, 60)
             self.client.loop_start()  # Start background loop
-            print(f"✅ Connected to MQTT broker")
+            
+            # Wait for connection
+            retry_count = 0
+            while not self.connected and retry_count < 10:
+                time.sleep(1)
+                retry_count += 1
+            
+            if self.connected:
+                print(f"✅ Connected to MQTT broker")
+            else:
+                raise ConnectionError("Failed to connect after 10 retries")
+                
         except Exception as e:
             print(f"❌ Failed to connect to MQTT broker: {e}")
             raise
@@ -83,6 +95,8 @@ class MQTTClient:
                 result = self.client.publish(topic, json.dumps(payload))
                 if result.rc != mqtt.MQTT_ERR_SUCCESS:
                     print(f"⚠️  Failed to publish to {topic}")
+                else:
+                    print(f"📤 Published to {topic}: {payload.get('entity', 'unknown')}")
             except Exception as e:
                 print(f"❌ Error publishing to {topic}: {e}")
         else:
@@ -232,7 +246,9 @@ class Machine:
         """Runs sensor data simulation over the specified duration."""
         global simulation_current_time
         steps = int(duration_s / DATA_SEND_INTERVAL)
-        for _ in range(steps):
+        print(f"  📊 Running {steps} sensor readings for {self.name}...")
+        
+        for step in range(steps):
             data = self.simulate_variable_data(DATA_SEND_INTERVAL)
             payload = {"entity": self.name, "data": data, "timestamp": simulation_current_time.isoformat()}
             self._publish_event(f"/plant/data/{self.name}", payload)
@@ -247,6 +263,8 @@ class Machine:
         duration_s = setup_min * 60
 
         self.state = "setup"
+        print(f"  🔧 {self.name}: Setting up tool {tool}...")
+        
         self._publish_event(f"/plant/tracking/{self.name}", {
             "entity": self.name,
             "event": "setup_start",
@@ -274,6 +292,8 @@ class Machine:
         tool_list = tools_map.get(self.type, [None])
         adjusted = duration_s * random.uniform(0.9, 1.1)
         slice_s = adjusted / len(tool_list)
+
+        print(f"  ⚙️  {self.name}: Processing {piece_id} with tools {tool_list}")
 
         for tool in tool_list:
             if self.type in ("Milling", "Lathe") and tool != self.current_tool:
@@ -321,10 +341,11 @@ if __name__ == "__main__":
     import signal
     import sys
     
-    # Impostazioni di base
-    BROKER_ADDRESS = "localhost"  # oppure IP broker MQTT
-    BROKER_PORT = 1883
-    TIME_MULTIPLIER = 80.0  # 1.0 = real-time, >1 velocizzato
+    # Configuration from environment variables
+    BROKER_ADDRESS = os.getenv('MQTT_BROKER', 'localhost')
+    BROKER_PORT = int(os.getenv('MQTT_PORT', '1883'))
+    TIME_MULTIPLIER = float(os.getenv('TIME_MULTIPLIER', '10.0'))
+    PIECE_COUNT = int(os.getenv('PIECE_COUNT', '5'))
 
     # Statistics
     stats = {
@@ -352,7 +373,8 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
     
     print("🏭 Starting IoT Industrial Simulator...")
-    print(f"⚡ Time multiplier: {TIME_MULTIPLIER}x (simulation accelerated)")
+    print(f"⚡ Time multiplier: {TIME_MULTIPLIER}x")
+    print(f"📦 Pieces to process: {PIECE_COUNT}")
     print(f"📡 MQTT Broker: {BROKER_ADDRESS}:{BROKER_PORT}")
     print("Press Ctrl+C to stop simulation\n")
 
@@ -368,24 +390,24 @@ if __name__ == "__main__":
             )
         }
 
-        plan = [
-            {"piece_id": f"PZ{idx:03d}", "material": mat, "tools": {tp: tools},
-             "route": ["Warehouse", "Saw1", machine, "Warehouse"]}
-            for idx, (machine, mat, tp, tools) in enumerate(
-                [
-                    ("Milling1", "steel", "Milling", ["TM10", "TM25"]),
-                    ("Milling1", "steel", "Milling", ["TM10", "TM25"]),
-                    ("Milling1", "steel", "Milling", ["TM10", "TM25"]),
-                    ("Milling2", "alu",   "Milling", ["TM12", "TM30"]),
-                    ("Milling2", "alu",   "Milling", ["TM12", "TM30"]),
-                    ("Milling2", "alu",   "Milling", ["TM12", "TM30"]),
-                    ("Lathe1",   "steel", "Lathe",   ["TL05"]),
-                    ("Lathe1",   "steel", "Lathe",   ["TL05"]),
-                    ("Lathe1",   "alu",   "Lathe",   ["TL08"]),
-                    ("Lathe1",   "alu",   "Lathe",   ["TL08"]),
-                ], start=1
-            )
+        # Limit plan based on PIECE_COUNT
+        plan_templates = [
+            ("Milling1", "steel", "Milling", ["TM10", "TM25"]),
+            ("Milling2", "alu",   "Milling", ["TM12", "TM30"]),
+            ("Lathe1",   "steel", "Lathe",   ["TL05"]),
+            ("Lathe1",   "alu",   "Lathe",   ["TL08"]),
         ]
+        
+        plan = []
+        for idx in range(PIECE_COUNT):
+            template = plan_templates[idx % len(plan_templates)]
+            machine, mat, tp, tools = template
+            plan.append({
+                "piece_id": f"PZ{idx+1:03d}", 
+                "material": mat, 
+                "tools": {tp: tools},
+                "route": ["Warehouse", "Saw1", machine, "Warehouse"]
+            })
 
         print(f"📋 Processing {len(plan)} pieces...")
         
@@ -393,7 +415,7 @@ if __name__ == "__main__":
             piece = Piece(job["piece_id"], job["route"], job["material"], job["tools"])
             prev = "Warehouse"
             
-            print(f"🔄 Processing piece {job_idx}/{len(plan)}: {piece.piece_id} ({job['material']})")
+            print(f"\n🔄 Processing piece {job_idx}/{len(plan)}: {piece.piece_id} ({job['material']})")
 
             for station in piece.route[1:-1]:
                 machine = machines[station]
@@ -402,6 +424,7 @@ if __name__ == "__main__":
 
                 if prev != station:
                     # move start
+                    print(f"  🚛 Moving {piece.piece_id} from {prev} to {station}")
                     publish_tracking_event(
                         mqtt_client, "piece", "move_start",
                         {"piece_id": piece.piece_id, "from": prev, "to": station},
@@ -436,6 +459,7 @@ if __name__ == "__main__":
                 stats['messages_sent'] += processing_steps + 2  # +2 for start/end events
 
             # return to warehouse
+            print(f"  🏠 Returning {piece.piece_id} to warehouse")
             publish_tracking_event(
                 mqtt_client, "piece", "move_start",
                 {"piece_id": piece.piece_id, "from": prev, "to": "Warehouse"},
@@ -460,9 +484,7 @@ if __name__ == "__main__":
             stats['messages_sent'] += 3
             stats['pieces_processed'] += 1
             
-            # Print progress every few pieces
-            if job_idx % 3 == 0:
-                print(f"✅ Completed {stats['pieces_processed']} pieces, sent {stats['messages_sent']} messages")
+            print(f"✅ Completed piece {piece.piece_id}")
 
         print(f"\n🎉 Simulation completed successfully!")
         print(f"📊 Final Statistics:")
@@ -471,8 +493,6 @@ if __name__ == "__main__":
         runtime = datetime.now() - stats['start_time']
         print(f"   Total runtime: {runtime}")
         
-    except KeyboardInterrupt:
-        signal_handler(signal.SIGINT, None)
     except Exception as e:
         print(f"❌ Simulation error: {e}")
         if mqtt_client:
