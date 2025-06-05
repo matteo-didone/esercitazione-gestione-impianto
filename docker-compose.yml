@@ -78,7 +78,7 @@ services:
     networks:
       - impianto-network
 
-  # Event Processor - Python Service
+  # Event Processor - Python Service with ML
   event-processor:
     build:
       context: ./mqtt-processor
@@ -100,6 +100,12 @@ services:
       - TEMP_WARNING_THRESHOLD=80.0
       - TEMP_CRITICAL_THRESHOLD=90.0
       - VIBRATION_WARNING_THRESHOLD=2.5
+      # ML Configuration
+      - ML_ENABLED=true
+      - ML_MODELS_DIR=/app/ml_models
+      - ML_PREDICTION_INTERVAL=10
+      - ML_TRAINING_INTERVAL=100
+      - ML_AUTO_TRAIN=true
     depends_on:
       mosquitto:
         condition: service_healthy
@@ -108,6 +114,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./logs/processor:/app/logs
+      - ml_models_volume:/app/ml_models  # Persistent ML models
     networks:
       - impianto-network
 
@@ -121,7 +128,7 @@ services:
       - MQTT_BROKER=mosquitto
       - MQTT_PORT=1883
       - TIME_MULTIPLIER=10
-      - PIECE_COUNT=5
+      - PIECE_COUNT=10  # Increased for more ML training data
       - PYTHONUNBUFFERED=1
     depends_on:
       mosquitto:
@@ -134,6 +141,35 @@ services:
     networks:
       - impianto-network
 
+  # ML Training Service (FIXED mounting)
+  ml-trainer:
+    build:
+      context: ./mqtt-processor
+      dockerfile: Dockerfile
+    container_name: gestione-impianto-ml-trainer
+    environment:
+      - INFLUXDB_URL=http://influxdb:8086
+      - INFLUXDB_TOKEN=factory-token-2024
+      - INFLUXDB_ORG=factory
+      - INFLUXDB_BUCKET=industrial_data
+      - PYTHONUNBUFFERED=1
+    command: ["python", "/app/database/train_ml_models.py"]
+    depends_on:
+      influxdb:
+        condition: service_healthy
+      event-processor:
+        condition: service_started
+    restart: "no"  # Run manually or via cron
+    volumes:
+      - ./logs/processor:/app/logs
+      - ml_models_volume:/app/ml_models  # Share models with processor
+      - ./database/train_ml_models.py:/app/database/train_ml_models.py:ro  # Mount training script
+      - ./mqtt-processor/src:/app/src:ro  # Mount ML modules
+    networks:
+      - impianto-network
+    profiles:
+      - ml-training  # Optional profile for manual ML training
+
 # Persistent Volumes
 volumes:
   impianto_influxdb_data:
@@ -145,6 +181,9 @@ volumes:
   impianto_grafana_data:
     driver: local
     name: gestione_impianto_grafana_data
+  ml_models_volume:
+    driver: local
+    name: gestione_impianto_ml_models
 
 # Network Configuration
 networks:

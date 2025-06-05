@@ -2,7 +2,7 @@
 FROM python:3.11-slim
 
 LABEL maintainer="IoT Industrial Team"
-LABEL description="MQTT to InfluxDB Event Processor"
+LABEL description="MQTT to InfluxDB Event Processor with ML"
 
 # Set working directory
 WORKDIR /app
@@ -20,8 +20,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Create src directory
-RUN mkdir -p src logs
+# Create src directory and ML models directory
+RUN mkdir -p src logs ml_models
 
 # Copy source code
 COPY src/ src/
@@ -30,6 +30,9 @@ COPY main.py .
 # Create non-root user for security
 RUN useradd --create-home --shell /bin/bash processor && \
     chown -R processor:processor /app
+
+# FIX: Make sure ml_models directory is writable
+RUN chmod 777 /app/ml_models
 
 # Switch to non-root user
 USER processor
