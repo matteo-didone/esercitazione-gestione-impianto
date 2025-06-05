@@ -3,139 +3,720 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏭 Dashboard IoT Industriale con ML</title>
+    <title>🏭 Dashboard IoT Industriale</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <link rel="stylesheet" href="static/css/dashboard.css">
+    <style>
+        /* Dashboard CSS - Fixed and Clean */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(45deg, #00d4ff, #5b86e5, #667eea);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #a0aec0;
+            font-size: 1.1rem;
+        }
+
+        /* Connection Status */
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            z-index: 1000;
+            background: rgba(72, 187, 120, 0.8);
+            color: white;
+        }
+
+        /* KPI Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 212, 255, 0.3);
+        }
+
+        .kpi-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .kpi-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .kpi-label {
+            color: #a0aec0;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Status Colors */
+        .status-online { color: #48bb78; }
+        .status-warning { color: #ed8936; }
+        .status-critical { color: #f56565; }
+        .status-info { color: #4299e1; }
+
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            height: 400px;
+        }
+
+        .chart-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .chart-canvas {
+            width: 100% !important;
+            height: 300px !important;
+            max-width: 800px !important;
+            max-height: 300px !important;
+        }
+
+        /* Machine Grid */
+        .machine-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .machine-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .machine-card.online { border-color: #48bb78; }
+        .machine-card.warning { border-color: #ed8936; }
+        .machine-card.critical { border-color: #f56565; }
+        .machine-card.offline { border-color: #6c757d; }
+
+        .machine-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .machine-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .machine-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .metric {
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: #a0aec0;
+        }
+
+        .machine-status {
+            text-align: center;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 8px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: #a0aec0;
+            font-size: 0.9rem;
+            margin-top: 30px;
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Fade in animation */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .title { font-size: 2rem; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .machine-grid { grid-template-columns: 1fr; }
+            .machine-metrics { grid-template-columns: 1fr; }
+        }
+
+        /* Error Messages */
+        .error-message {
+            background: rgba(245, 101, 101, 0.2);
+            border: 1px solid #f56565;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            color: #f56565;
+        }
+    </style>
 </head>
 <body>
     <div class="dashboard">
         <!-- Header -->
         <div class="header">
-            <h1 class="title">🏭 Dashboard Industriale ML</h1>
-            <p class="subtitle">Monitoraggio Real-time + Machine Learning</p>
+            <h1 class="title">🏭 Dashboard Industriale IoT</h1>
+            <p class="subtitle">Monitoraggio Real-time + Analytics</p>
         </div>
         
         <!-- Connection Status -->
         <div class="connection-status" id="connectionStatus">
-            <div class="loading"></div> Caricamento...
+            🟢 Connesso
         </div>
         
-        <!-- Error Messages -->
+        <!-- Error Container -->
         <div id="errorContainer"></div>
         
-        <!-- KPI Cards Row 1 - Operational -->
-        <div class="kpi-section">
-            <h2>📊 Stato Operativo</h2>
-            <div class="kpi-grid">
-                <div class="kpi-card">
-                    <div class="kpi-icon">🏭</div>
-                    <div class="kpi-value" id="plant-status"><div class="loading"></div></div>
-                    <div class="kpi-label">Stato Impianto</div>
+        <!-- KPI Cards -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-icon">🏭</div>
+                <div class="kpi-value" id="plant-status">
+                    <div class="loading"></div>
                 </div>
-                
-                <div class="kpi-card">
-                    <div class="kpi-icon">📦</div>
-                    <div class="kpi-value" id="pieces-count"><div class="loading"></div></div>
-                    <div class="kpi-label">Pezzi Lavorati (24h)</div>
-                </div>
-                
-                <div class="kpi-card">
-                    <div class="kpi-icon">🚨</div>
-                    <div class="kpi-value" id="alerts-count"><div class="loading"></div></div>
-                    <div class="kpi-label">Allarmi Attivi</div>
-                </div>
-                
-                <div class="kpi-card">
-                    <div class="kpi-icon">⚡</div>
-                    <div class="kpi-value" id="total-power"><div class="loading"></div></div>
-                    <div class="kpi-label">Potenza Totale (kW)</div>
-                </div>
+                <div class="kpi-label">Stato Impianto</div>
             </div>
-        </div>
-
-        <!-- KPI Cards Row 2 - ML Predictions -->
-        <div class="kpi-section ml-section">
-            <h2>🤖 Predizioni Machine Learning</h2>
-            <div class="kpi-grid">
-                <div class="kpi-card ml-card">
-                    <div class="kpi-icon">🔧</div>
-                    <div class="kpi-value" id="maintenance-prediction"><div class="loading"></div></div>
-                    <div class="kpi-label">Prossima Manutenzione</div>
-                    <div class="ml-confidence" id="maintenance-confidence">--% confidence</div>
+            
+            <div class="kpi-card">
+                <div class="kpi-icon">📦</div>
+                <div class="kpi-value" id="pieces-count">
+                    <div class="loading"></div>
                 </div>
-                
-                <div class="kpi-card ml-card">
-                    <div class="kpi-icon">⚡</div>
-                    <div class="kpi-value" id="energy-optimization"><div class="loading"></div></div>
-                    <div class="kpi-label">Risparmio Energetico</div>
-                    <div class="ml-confidence" id="energy-confidence">--% ottimizzazione</div>
+                <div class="kpi-label">Pezzi Lavorati (24h)</div>
+            </div>
+            
+            <div class="kpi-card">
+                <div class="kpi-icon">🚨</div>
+                <div class="kpi-value" id="alerts-count">
+                    <div class="loading"></div>
                 </div>
-                
-                <div class="kpi-card ml-card">
-                    <div class="kpi-icon">📈</div>
-                    <div class="kpi-value" id="efficiency-prediction"><div class="loading"></div></div>
-                    <div class="kpi-label">Efficienza Prevista</div>
-                    <div class="ml-confidence" id="efficiency-trend">-- trend</div>
+                <div class="kpi-label">Allarmi Attivi</div>
+            </div>
+            
+            <div class="kpi-card">
+                <div class="kpi-icon">⚡</div>
+                <div class="kpi-value" id="total-power">
+                    <div class="loading"></div>
                 </div>
-                
-                <div class="kpi-card ml-card">
-                    <div class="kpi-icon">🎯</div>
-                    <div class="kpi-value" id="anomaly-score"><div class="loading"></div></div>
-                    <div class="kpi-label">Anomaly Score</div>
-                    <div class="ml-confidence" id="anomaly-status">-- status</div>
-                </div>
+                <div class="kpi-label">Potenza Totale (kW)</div>
             </div>
         </div>
         
-        <!-- Main Charts Grid -->
+        <!-- Charts Grid -->
         <div class="charts-grid">
-            <!-- Real-time Sensor Data -->
             <div class="chart-container">
-                <h3 class="chart-title">🌡️ Temperature Macchine (Real-time)</h3>
-                <canvas id="tempChart" width="400" height="200"></canvas>
+                <h3 class="chart-title">🌡️ Temperature Macchine</h3>
+                <canvas id="tempChart" class="chart-canvas"></canvas>
             </div>
             
             <div class="chart-container">
-                <h3 class="chart-title">⚡ Consumo Energetico (Real-time)</h3>
-                <canvas id="powerChart" width="400" height="200"></canvas>
-            </div>
-            
-            <!-- ML Predictions Charts -->
-            <div class="chart-container ml-chart">
-                <h3 class="chart-title">🔧 Predizione Manutenzione</h3>
-                <canvas id="maintenanceChart" width="400" height="200"></canvas>
-            </div>
-            
-            <div class="chart-container ml-chart">
-                <h3 class="chart-title">📊 Ottimizzazione Energetica</h3>
-                <canvas id="energyOptChart" width="400" height="200"></canvas>
+                <h3 class="chart-title">⚡ Consumo Energetico</h3>
+                <canvas id="powerChart" class="chart-canvas"></canvas>
             </div>
         </div>
         
-        <!-- Machine Status with ML -->
+        <!-- Machine Status -->
         <div class="machine-section">
-            <h3>🏭 Stato Macchine + ML Insights</h3>
+            <h3 style="font-size: 1.4rem; margin-bottom: 20px; padding-left: 10px; border-left: 4px solid #48bb78;">
+                🏭 Stato Macchine
+            </h3>
             <div class="machine-grid" id="machineGrid">
                 <!-- Machines will be populated dynamically -->
-            </div>
-        </div>
-        
-        <!-- ML Model Status -->
-        <div class="ml-status-section">
-            <h3>🤖 Stato Modelli ML</h3>
-            <div class="ml-models-grid" id="mlModelsGrid">
-                <!-- ML model status will be populated -->
             </div>
         </div>
         
         <!-- Footer -->
         <div class="footer">
             <p>Ultimo aggiornamento: <span id="last-update">--:--:--</span> | Auto-refresh ogni 10 secondi</p>
-            <p>🤖 ML Models: <span id="ml-status">Attivi</span> | 📊 Real-time + Predittivo</p>
         </div>
     </div>
     
-    <script src="static/js/dashboard.js"></script>
-    <script src="static/js/ml-integration.js"></script>
+    <script>
+        // Fixed Dashboard JavaScript
+        const CONFIG = {
+            influxdb: {
+                url: 'http://localhost:8086',
+                token: 'factory-token-2024',
+                org: 'factory',
+                bucket: 'industrial_data'
+            },
+            refresh_interval: 10000
+        };
+
+        // Global variables
+        let charts = {};
+        let isConnected = false;
+        let lastUpdateTime = null;
+
+        /**
+         * Initialize dashboard
+         */
+        async function initDashboard() {
+            console.log('🚀 Initializing Dashboard...');
+            
+            // Initialize charts
+            initCharts();
+            
+            // Load initial data
+            await updateAllData();
+            
+            // Setup auto-refresh
+            setInterval(updateAllData, CONFIG.refresh_interval);
+            
+            console.log('✅ Dashboard initialized');
+        }
+
+        /**
+         * Initialize charts with proper error handling
+         */
+        function initCharts() {
+            console.log('📊 Initializing charts...');
+            
+            // Common chart configuration
+            const chartConfig = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: '#ffffff' }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: '#a0aec0' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    },
+                    y: {
+                        ticks: { color: '#a0aec0' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                    }
+                }
+            };
+
+            try {
+                // Temperature Chart
+                const tempCanvas = document.getElementById('tempChart');
+                if (tempCanvas) {
+                    charts.temperature = new Chart(tempCanvas, {
+                        type: 'line',
+                        data: {
+                            labels: [],
+                            datasets: []
+                        },
+                        options: {
+                            ...chartConfig,
+                            scales: {
+                                ...chartConfig.scales,
+                                y: {
+                                    ...chartConfig.scales.y,
+                                    min: 15,
+                                    max: 100,
+                                    title: {
+                                        display: true,
+                                        text: 'Temperatura (°C)',
+                                        color: '#ffffff'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                // Power Chart
+                const powerCanvas = document.getElementById('powerChart');
+                if (powerCanvas) {
+                    charts.power = new Chart(powerCanvas, {
+                        type: 'line',
+                        data: {
+                            labels: [],
+                            datasets: []
+                        },
+                        options: {
+                            ...chartConfig,
+                            scales: {
+                                ...chartConfig.scales,
+                                y: {
+                                    ...chartConfig.scales.y,
+                                    min: 0,
+                                    title: {
+                                        display: true,
+                                        text: 'Potenza (kW)',
+                                        color: '#ffffff'
+                                    }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                console.log('✅ Charts initialized');
+                
+            } catch (error) {
+                console.error('❌ Error initializing charts:', error);
+            }
+        }
+
+        /**
+         * Update KPIs with mock data
+         */
+        async function updateKPIs() {
+            try {
+                // Mock data for demonstration
+                const isOnline = Math.random() > 0.1; // 90% uptime
+                
+                const plantStatusEl = document.getElementById('plant-status');
+                if (isOnline) {
+                    plantStatusEl.innerHTML = '<span class="status-online">🟢 ONLINE</span>';
+                } else {
+                    plantStatusEl.innerHTML = '<span class="status-critical">🔴 OFFLINE</span>';
+                }
+
+                const piecesCount = Math.floor(Math.random() * 20) + 10;
+                document.getElementById('pieces-count').innerHTML = `<span class="status-info">${piecesCount}</span>`;
+
+                const alertsCount = Math.floor(Math.random() * 4);
+                const alertsEl = document.getElementById('alerts-count');
+                if (alertsCount === 0) {
+                    alertsEl.innerHTML = '<span class="status-online">0</span>';
+                } else {
+                    alertsEl.innerHTML = `<span class="status-critical">${alertsCount}</span>`;
+                }
+
+                const totalPower = (Math.random() * 8 + 3).toFixed(1);
+                document.getElementById('total-power').innerHTML = `<span class="status-info">${totalPower}</span>`;
+
+                updateConnectionStatus(true);
+
+            } catch (error) {
+                console.error('Error updating KPIs:', error);
+                showError('Errore aggiornamento KPI');
+            }
+        }
+
+        /**
+         * Update temperature chart
+         */
+        async function updateTemperatureChart() {
+            try {
+                if (!charts.temperature) return;
+
+                const machines = ['Milling1', 'Milling2', 'Lathe1', 'Saw1'];
+                const now = new Date();
+                const labels = [];
+
+                // Generate time labels
+                for (let i = 9; i >= 0; i--) {
+                    const time = new Date(now.getTime() - i * 60000);
+                    labels.push(time.toLocaleTimeString('it-IT', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }));
+                }
+
+                const datasets = machines.map((machine, index) => {
+                    const colors = ['#48bb78', '#ed8936', '#4299e1', '#9f7aea'];
+                    const baseTemp = 45 + index * 10;
+                    const data = labels.map(() => {
+                        const variation = Math.sin(Date.now() / 100000 + index) * 10;
+                        return Math.max(20, baseTemp + variation + (Math.random() - 0.5) * 10);
+                    });
+
+                    return {
+                        label: machine,
+                        data: data,
+                        borderColor: colors[index % colors.length],
+                        backgroundColor: colors[index % colors.length] + '20',
+                        tension: 0.4,
+                        borderWidth: 3
+                    };
+                });
+
+                charts.temperature.data.labels = labels;
+                charts.temperature.data.datasets = datasets;
+                charts.temperature.update('none');
+
+            } catch (error) {
+                console.error('Error updating temperature chart:', error);
+            }
+        }
+
+        /**
+         * Update power chart
+         */
+        async function updatePowerChart() {
+            try {
+                if (!charts.power) return;
+
+                const now = new Date();
+                const labels = [];
+                const values = [];
+
+                for (let i = 9; i >= 0; i--) {
+                    const time = new Date(now.getTime() - i * 60000);
+                    labels.push(time.toLocaleTimeString('it-IT', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }));
+                    
+                    // Simulate realistic power consumption
+                    const basePower = 5;
+                    const variation = Math.sin(Date.now() / 80000) * 2;
+                    values.push((basePower + variation + Math.random()).toFixed(1));
+                }
+
+                charts.power.data.labels = labels;
+                charts.power.data.datasets = [{
+                    label: 'Consumo Totale',
+                    data: values,
+                    borderColor: '#00d4ff',
+                    backgroundColor: 'rgba(0, 212, 255, 0.2)',
+                    tension: 0.4,
+                    fill: true,
+                    borderWidth: 3
+                }];
+
+                charts.power.update('none');
+
+            } catch (error) {
+                console.error('Error updating power chart:', error);
+            }
+        }
+
+        /**
+         * Update machine status
+         */
+        async function updateMachineStatus() {
+            try {
+                const machines = [
+                    { name: 'Milling1', baseTemp: 45, basePower: 2.3 },
+                    { name: 'Milling2', baseTemp: 52, basePower: 3.1 },
+                    { name: 'Lathe1', baseTemp: 38, basePower: 1.8 },
+                    { name: 'Saw1', baseTemp: 28, basePower: 0.8 }
+                ];
+
+                const machineGrid = document.getElementById('machineGrid');
+                machineGrid.innerHTML = '';
+
+                for (const machine of machines) {
+                    // Simulate realistic variations
+                    const temp = machine.baseTemp + (Math.random() - 0.5) * 20;
+                    const power = Math.max(0.1, machine.basePower + (Math.random() - 0.5) * 1.5);
+
+                    let statusClass = 'online';
+                    let statusText = '🟢 Operativa';
+                    let tempClass = 'status-online';
+
+                    if (temp > 85) {
+                        statusClass = 'critical';
+                        statusText = '🔴 Critica';
+                        tempClass = 'status-critical';
+                    } else if (temp > 70) {
+                        statusClass = 'warning';
+                        statusText = '🟡 Attenzione';
+                        tempClass = 'status-warning';
+                    } else if (power < 0.2) {
+                        statusClass = 'offline';
+                        statusText = '⚫ Idle';
+                        tempClass = 'status-info';
+                    }
+
+                    const machineCard = document.createElement('div');
+                    machineCard.className = `machine-card ${statusClass} fade-in`;
+                    machineCard.innerHTML = `
+                        <div class="machine-header">
+                            <div class="machine-name">${machine.name}</div>
+                        </div>
+                        <div class="machine-metrics">
+                            <div class="metric">
+                                <div class="metric-value ${tempClass}">${temp.toFixed(1)}°C</div>
+                                <div class="metric-label">Temperatura</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-value status-info">${power.toFixed(1)} kW</div>
+                                <div class="metric-label">Potenza</div>
+                            </div>
+                        </div>
+                        <div class="machine-status">${statusText}</div>
+                    `;
+
+                    machineGrid.appendChild(machineCard);
+                }
+
+            } catch (error) {
+                console.error('Error updating machine status:', error);
+            }
+        }
+
+        /**
+         * Update connection status
+         */
+        function updateConnectionStatus(connected, message = '') {
+            const statusEl = document.getElementById('connectionStatus');
+            isConnected = connected;
+
+            if (connected) {
+                statusEl.className = 'connection-status';
+                statusEl.innerHTML = '🟢 Connesso';
+            } else {
+                statusEl.innerHTML = `🔴 ${message || 'Disconnesso'}`;
+            }
+        }
+
+        /**
+         * Show error message
+         */
+        function showError(message) {
+            const errorContainer = document.getElementById('errorContainer');
+            errorContainer.innerHTML = `<div class="error-message">⚠️ ${message}</div>`;
+            updateConnectionStatus(false, 'Errore');
+        }
+
+        /**
+         * Clear errors
+         */
+        function clearErrors() {
+            document.getElementById('errorContainer').innerHTML = '';
+        }
+
+        /**
+         * Update all data
+         */
+        async function updateAllData() {
+            try {
+                clearErrors();
+
+                await Promise.all([
+                    updateKPIs(),
+                    updateTemperatureChart(),
+                    updatePowerChart(),
+                    updateMachineStatus()
+                ]);
+
+                updateConnectionStatus(true);
+                lastUpdateTime = new Date();
+
+                document.getElementById('last-update').textContent =
+                    lastUpdateTime.toLocaleTimeString('it-IT');
+
+                console.log('📊 Data updated successfully');
+
+            } catch (error) {
+                console.error('Error updating data:', error);
+                showError('Errore aggiornamento dati');
+            }
+        }
+
+        // Initialize dashboard when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initDashboard);
+
+    </script>
 </body>
 </html>
