@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏭 Dashboard IoT Industriale con ML</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="static/css/dashboard.css">
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <div class="header">
+            <h1 class="title">🏭 Dashboard Industriale ML</h1>
+            <p class="subtitle">Monitoraggio Real-time + Machine Learning</p>
+        </div>
+        
+        <!-- Connection Status -->
+        <div class="connection-status" id="connectionStatus">
+            <div class="loading"></div> Caricamento...
+        </div>
+        
+        <!-- Error Messages -->
+        <div id="errorContainer"></div>
+        
+        <!-- KPI Cards Row 1 - Operational -->
+        <div class="kpi-section">
+            <h2>📊 Stato Operativo</h2>
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon">🏭</div>
+                    <div class="kpi-value" id="plant-status"><div class="loading"></div></div>
+                    <div class="kpi-label">Stato Impianto</div>
+                </div>
+                
+                <div class="kpi-card">
+                    <div class="kpi-icon">📦</div>
+                    <div class="kpi-value" id="pieces-count"><div class="loading"></div></div>
+                    <div class="kpi-label">Pezzi Lavorati (24h)</div>
+                </div>
+                
+                <div class="kpi-card">
+                    <div class="kpi-icon">🚨</div>
+                    <div class="kpi-value" id="alerts-count"><div class="loading"></div></div>
+                    <div class="kpi-label">Allarmi Attivi</div>
+                </div>
+                
+                <div class="kpi-card">
+                    <div class="kpi-icon">⚡</div>
+                    <div class="kpi-value" id="total-power"><div class="loading"></div></div>
+                    <div class="kpi-label">Potenza Totale (kW)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI Cards Row 2 - ML Predictions -->
+        <div class="kpi-section ml-section">
+            <h2>🤖 Predizioni Machine Learning</h2>
+            <div class="kpi-grid">
+                <div class="kpi-card ml-card">
+                    <div class="kpi-icon">🔧</div>
+                    <div class="kpi-value" id="maintenance-prediction"><div class="loading"></div></div>
+                    <div class="kpi-label">Prossima Manutenzione</div>
+                    <div class="ml-confidence" id="maintenance-confidence">--% confidence</div>
+                </div>
+                
+                <div class="kpi-card ml-card">
+                    <div class="kpi-icon">⚡</div>
+                    <div class="kpi-value" id="energy-optimization"><div class="loading"></div></div>
+                    <div class="kpi-label">Risparmio Energetico</div>
+                    <div class="ml-confidence" id="energy-confidence">--% ottimizzazione</div>
+                </div>
+                
+                <div class="kpi-card ml-card">
+                    <div class="kpi-icon">📈</div>
+                    <div class="kpi-value" id="efficiency-prediction"><div class="loading"></div></div>
+                    <div class="kpi-label">Efficienza Prevista</div>
+                    <div class="ml-confidence" id="efficiency-trend">-- trend</div>
+                </div>
+                
+                <div class="kpi-card ml-card">
+                    <div class="kpi-icon">🎯</div>
+                    <div class="kpi-value" id="anomaly-score"><div class="loading"></div></div>
+                    <div class="kpi-label">Anomaly Score</div>
+                    <div class="ml-confidence" id="anomaly-status">-- status</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Charts Grid -->
+        <div class="charts-grid">
+            <!-- Real-time Sensor Data -->
+            <div class="chart-container">
+                <h3 class="chart-title">🌡️ Temperature Macchine (Real-time)</h3>
+                <canvas id="tempChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="chart-container">
+                <h3 class="chart-title">⚡ Consumo Energetico (Real-time)</h3>
+                <canvas id="powerChart" width="400" height="200"></canvas>
+            </div>
+            
+            <!-- ML Predictions Charts -->
+            <div class="chart-container ml-chart">
+                <h3 class="chart-title">🔧 Predizione Manutenzione</h3>
+                <canvas id="maintenanceChart" width="400" height="200"></canvas>
+            </div>
+            
+            <div class="chart-container ml-chart">
+                <h3 class="chart-title">📊 Ottimizzazione Energetica</h3>
+                <canvas id="energyOptChart" width="400" height="200"></canvas>
+            </div>
+        </div>
+        
+        <!-- Machine Status with ML -->
+        <div class="machine-section">
+            <h3>🏭 Stato Macchine + ML Insights</h3>
+            <div class="machine-grid" id="machineGrid">
+                <!-- Machines will be populated dynamically -->
+            </div>
+        </div>
+        
+        <!-- ML Model Status -->
+        <div class="ml-status-section">
+            <h3>🤖 Stato Modelli ML</h3>
+            <div class="ml-models-grid" id="mlModelsGrid">
+                <!-- ML model status will be populated -->
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p>Ultimo aggiornamento: <span id="last-update">--:--:--</span> | Auto-refresh ogni 10 secondi</p>
+            <p>🤖 ML Models: <span id="ml-status">Attivi</span> | 📊 Real-time + Predittivo</p>
+        </div>
+    </div>
+    
+    <script src="static/js/dashboard.js"></script>
+    <script src="static/js/ml-integration.js"></script>
+</body>
+</html>

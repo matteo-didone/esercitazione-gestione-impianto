@@ -1,0 +1,4 @@
+http-cors-enabled: true
+http-cors-allowed-origins: ["*"]
+http-cors-allowed-methods: ["GET", "POST", "OPTIONS"]
+http-cors-allowed-headers: ["Accept", "Authorization", "Content-Type", "X-CSRF-Token"]
