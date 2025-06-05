@@ -28637,3 +28637,12 @@ TypeError: unsupported operand type(s) for +: 'int' and 'NoneType'
 2025-06-05 08:26:15,352 - src.data_processor - WARNING - 🚨 Anomalies detected for Milling1: ['Critical vibration: 6.77g', 'Critical power consumption: 66.29kW']
 2025-06-05 08:26:15,353 - src.influx_writer - WARNING - 🚨 Alert written: Critical vibration: 6.77g
 2025-06-05 08:26:15,354 - src.influx_writer - WARNING - 🚨 Alert written: Critical power consumption: 66.29kW
+2025-06-05 08:26:15,646 - src.data_processor - WARNING - 🚨 Anomalies detected for Milling1: ['Critical vibration: 7.13g', 'Critical power consumption: 69.86kW']
+2025-06-05 08:26:15,646 - src.influx_writer - WARNING - 🚨 Alert written: Critical vibration: 7.13g
+2025-06-05 08:26:15,647 - src.influx_writer - WARNING - 🚨 Alert written: Critical power consumption: 69.86kW
+2025-06-05 08:26:15,949 - src.data_processor - WARNING - 🚨 Anomalies detected for Milling1: ['Critical vibration: 7.22g', 'Critical power consumption: 70.58kW']
+2025-06-05 08:26:15,951 - src.influx_writer - WARNING - 🚨 Alert written: Critical vibration: 7.22g
+2025-06-05 08:26:15,951 - src.influx_writer - WARNING - 🚨 Alert written: Critical power consumption: 70.58kW
+2025-06-05 08:26:16,255 - src.data_processor - WARNING - 🚨 Anomalies detected for Milling1: ['Critical vibration: 7.04g', 'Critical power consumption: 69.23kW']
+2025-06-05 08:26:16,258 - src.influx_writer - WARNING - 🚨 Alert written: Critical vibration: 7.04g
+2025-06-05 08:26:16,258 - src.influx_writer - WARNING - 🚨 Alert written: Critical power consumption: 69.23kW
