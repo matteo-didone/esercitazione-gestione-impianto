@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🏭 Dashboard IoT Industriale</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
-        /* Dashboard CSS - Fixed and Clean */
+        /* Dashboard CSS - Clean and Minimal */
         * {
             margin: 0;
             padding: 0;
@@ -56,7 +57,20 @@
             font-size: 0.8rem;
             font-weight: 600;
             z-index: 1000;
+        }
+
+        .connection-status.connected {
             background: rgba(72, 187, 120, 0.8);
+            color: white;
+        }
+
+        .connection-status.error {
+            background: rgba(245, 101, 101, 0.8);
+            color: white;
+        }
+
+        .connection-status.no-data {
+            background: rgba(237, 137, 54, 0.8);
             color: white;
         }
 
@@ -102,10 +116,25 @@
         }
 
         /* Status Colors */
-        .status-online { color: #48bb78; }
-        .status-warning { color: #ed8936; }
-        .status-critical { color: #f56565; }
-        .status-info { color: #4299e1; }
+        .status-online {
+            color: #48bb78;
+        }
+
+        .status-warning {
+            color: #ed8936;
+        }
+
+        .status-critical {
+            color: #f56565;
+        }
+
+        .status-info {
+            color: #4299e1;
+        }
+
+        .status-no-data {
+            color: #a0aec0;
+        }
 
         /* Charts Grid */
         .charts-grid {
@@ -138,6 +167,15 @@
             max-height: 300px !important;
         }
 
+        .no-data-message {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            color: #a0aec0;
+            font-size: 1.1rem;
+        }
+
         /* Machine Grid */
         .machine-grid {
             display: grid;
@@ -155,10 +193,21 @@
             transition: all 0.3s ease;
         }
 
-        .machine-card.online { border-color: #48bb78; }
-        .machine-card.warning { border-color: #ed8936; }
-        .machine-card.critical { border-color: #f56565; }
-        .machine-card.offline { border-color: #6c757d; }
+        .machine-card.online {
+            border-color: #48bb78;
+        }
+
+        .machine-card.warning {
+            border-color: #ed8936;
+        }
+
+        .machine-card.critical {
+            border-color: #f56565;
+        }
+
+        .machine-card.offline {
+            border-color: #6c757d;
+        }
 
         .machine-header {
             display: flex;
@@ -226,7 +275,9 @@
         }
 
         @keyframes spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* Fade in animation */
@@ -235,16 +286,34 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         /* Responsive */
         @media (max-width: 768px) {
-            .title { font-size: 2rem; }
-            .charts-grid { grid-template-columns: 1fr; }
-            .machine-grid { grid-template-columns: 1fr; }
-            .machine-metrics { grid-template-columns: 1fr; }
+            .title {
+                font-size: 2rem;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .machine-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .machine-metrics {
+                grid-template-columns: 1fr;
+            }
         }
 
         /* Error Messages */
@@ -259,22 +328,23 @@
         }
     </style>
 </head>
+
 <body>
     <div class="dashboard">
         <!-- Header -->
         <div class="header">
             <h1 class="title">🏭 Dashboard Industriale IoT</h1>
-            <p class="subtitle">Monitoraggio Real-time + Analytics</p>
+            <p class="subtitle">Dati Real-time da InfluxDB</p>
         </div>
-        
+
         <!-- Connection Status -->
         <div class="connection-status" id="connectionStatus">
-            🟢 Connesso
+            <div class="loading"></div> Connessione...
         </div>
-        
+
         <!-- Error Container -->
         <div id="errorContainer"></div>
-        
+
         <!-- KPI Cards -->
         <div class="kpi-grid">
             <div class="kpi-card">
@@ -284,7 +354,7 @@
                 </div>
                 <div class="kpi-label">Stato Impianto</div>
             </div>
-            
+
             <div class="kpi-card">
                 <div class="kpi-icon">📦</div>
                 <div class="kpi-value" id="pieces-count">
@@ -292,7 +362,7 @@
                 </div>
                 <div class="kpi-label">Pezzi Lavorati (24h)</div>
             </div>
-            
+
             <div class="kpi-card">
                 <div class="kpi-icon">🚨</div>
                 <div class="kpi-value" id="alerts-count">
@@ -300,7 +370,7 @@
                 </div>
                 <div class="kpi-label">Allarmi Attivi</div>
             </div>
-            
+
             <div class="kpi-card">
                 <div class="kpi-icon">⚡</div>
                 <div class="kpi-value" id="total-power">
@@ -309,38 +379,45 @@
                 <div class="kpi-label">Potenza Totale (kW)</div>
             </div>
         </div>
-        
+
         <!-- Charts Grid -->
         <div class="charts-grid">
             <div class="chart-container">
-                <h3 class="chart-title">🌡️ Temperature Macchine</h3>
+                <h3 class="chart-title">🌡️ Temperature Macchine (ultimi 30 min)</h3>
                 <canvas id="tempChart" class="chart-canvas"></canvas>
+                <div id="tempChartNoData" class="no-data-message" style="display: none;">
+                    📊 Nessun dato di temperatura disponibile
+                </div>
             </div>
-            
+
             <div class="chart-container">
-                <h3 class="chart-title">⚡ Consumo Energetico</h3>
+                <h3 class="chart-title">⚡ Consumo Energetico (ultimi 30 min)</h3>
                 <canvas id="powerChart" class="chart-canvas"></canvas>
+                <div id="powerChartNoData" class="no-data-message" style="display: none;">
+                    📊 Nessun dato di potenza disponibile
+                </div>
             </div>
         </div>
-        
+
         <!-- Machine Status -->
         <div class="machine-section">
             <h3 style="font-size: 1.4rem; margin-bottom: 20px; padding-left: 10px; border-left: 4px solid #48bb78;">
-                🏭 Stato Macchine
+                🏭 Stato Macchine (ultimi 5 minuti)
             </h3>
             <div class="machine-grid" id="machineGrid">
                 <!-- Machines will be populated dynamically -->
             </div>
         </div>
-        
+
         <!-- Footer -->
         <div class="footer">
             <p>Ultimo aggiornamento: <span id="last-update">--:--:--</span> | Auto-refresh ogni 10 secondi</p>
+            <p>📊 Dati Real-time da InfluxDB | 🔄 Solo dati reali, nessuna simulazione</p>
         </div>
     </div>
-    
+
     <script>
-        // Fixed Dashboard JavaScript
+        // REAL DATA ONLY Dashboard JavaScript
         const CONFIG = {
             influxdb: {
                 url: 'http://localhost:8086',
@@ -355,32 +432,32 @@
         let charts = {};
         let isConnected = false;
         let lastUpdateTime = null;
+        let hasRealData = false;
 
         /**
          * Initialize dashboard
          */
         async function initDashboard() {
-            console.log('🚀 Initializing Dashboard...');
-            
+            console.log('🚀 Initializing Real Data Dashboard...');
+
             // Initialize charts
             initCharts();
-            
+
             // Load initial data
             await updateAllData();
-            
+
             // Setup auto-refresh
             setInterval(updateAllData, CONFIG.refresh_interval);
-            
+
             console.log('✅ Dashboard initialized');
         }
 
         /**
-         * Initialize charts with proper error handling
+         * Initialize charts
          */
         function initCharts() {
             console.log('📊 Initializing charts...');
-            
-            // Common chart configuration
+
             const chartConfig = {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -417,8 +494,6 @@
                                 ...chartConfig.scales,
                                 y: {
                                     ...chartConfig.scales.y,
-                                    min: 15,
-                                    max: 100,
                                     title: {
                                         display: true,
                                         text: 'Temperatura (°C)',
@@ -458,31 +533,152 @@
                 }
 
                 console.log('✅ Charts initialized');
-                
+
             } catch (error) {
                 console.error('❌ Error initializing charts:', error);
             }
         }
 
         /**
-         * Update KPIs with mock data
+         * Query InfluxDB for real data
+         */
+        async function queryInfluxDB(fluxQuery) {
+            try {
+                const response = await fetch(`${CONFIG.influxdb.url}/api/v2/query?org=${CONFIG.influxdb.org}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Token ${CONFIG.influxdb.token}`,
+                        'Content-Type': 'application/vnd.flux',
+                        'Accept': 'application/csv'
+                    },
+                    body: fluxQuery
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const csvData = await response.text();
+                return parseInfluxCSV(csvData);
+
+            } catch (error) {
+                console.error('InfluxDB Query Error:', error);
+                return null;
+            }
+        }
+
+        /**
+         * Parse InfluxDB CSV response
+         */
+        function parseInfluxCSV(csvData) {
+            const lines = csvData.trim().split('\n');
+            if (lines.length < 2) return [];
+
+            const headers = lines[0].split(',');
+            const data = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i].trim() === '') continue;
+
+                const values = lines[i].split(',');
+                const row = {};
+
+                headers.forEach((header, index) => {
+                    const cleanHeader = header.trim();
+                    const cleanValue = values[index] ? values[index].trim() : '';
+
+                    if (cleanValue !== '') {
+                        if (!isNaN(cleanValue) && cleanValue !== '') {
+                            row[cleanHeader] = parseFloat(cleanValue);
+                        } else {
+                            row[cleanHeader] = cleanValue;
+                        }
+                    }
+                });
+
+                if (Object.keys(row).length > 0) {
+                    data.push(row);
+                }
+            }
+
+            return data;
+        }
+
+        /**
+         * Update KPIs with REAL data only
          */
         async function updateKPIs() {
             try {
-                // Mock data for demonstration
-                const isOnline = Math.random() > 0.1; // 90% uptime
-                
-                const plantStatusEl = document.getElementById('plant-status');
-                if (isOnline) {
-                    plantStatusEl.innerHTML = '<span class="status-online">🟢 ONLINE</span>';
-                } else {
-                    plantStatusEl.innerHTML = '<span class="status-critical">🔴 OFFLINE</span>';
+                // Check if we have any recent data
+                const recentDataQuery = `
+                    from(bucket:"${CONFIG.influxdb.bucket}")
+                    |> range(start: -5m)
+                    |> limit(n: 1)
+                `;
+
+                const recentData = await queryInfluxDB(recentDataQuery);
+
+                if (!recentData || recentData.length === 0) {
+                    // No data available
+                    document.getElementById('plant-status').innerHTML = '<span class="status-no-data">⚫ NO DATA</span>';
+                    document.getElementById('pieces-count').innerHTML = '<span class="status-no-data">--</span>';
+                    document.getElementById('alerts-count').innerHTML = '<span class="status-no-data">--</span>';
+                    document.getElementById('total-power').innerHTML = '<span class="status-no-data">--</span>';
+
+                    updateConnectionStatus(false, 'Nessun dato');
+                    hasRealData = false;
+                    return;
                 }
 
-                const piecesCount = Math.floor(Math.random() * 20) + 10;
+                hasRealData = true;
+                updateConnectionStatus(true);
+
+                // Get pieces completed in last 24h
+                const piecesQuery = `
+                    from(bucket:"${CONFIG.influxdb.bucket}")
+                    |> range(start: -24h)
+                    |> filter(fn: (r) => r._measurement == "piece_tracking")
+                    |> filter(fn: (r) => r.event_type == "deposit")
+                    |> count()
+                `;
+
+                // Get current total power
+                const powerQuery = `
+                    from(bucket:"${CONFIG.influxdb.bucket}")
+                    |> range(start: -5m)
+                    |> filter(fn: (r) => r._measurement == "sensor_data")
+                    |> filter(fn: (r) => r._field == "power")
+                    |> group(columns: ["machine"])
+                    |> last()
+                    |> sum()
+                `;
+
+                // Get current alerts (temperature > 80)
+                const alertsQuery = `
+                    from(bucket:"${CONFIG.influxdb.bucket}")
+                    |> range(start: -5m)
+                    |> filter(fn: (r) => r._measurement == "sensor_data")
+                    |> filter(fn: (r) => r._field == "temperature")
+                    |> filter(fn: (r) => r._value > 80.0)
+                    |> group(columns: ["machine"])
+                    |> count()
+                `;
+
+                const [piecesData, powerData, alertsData] = await Promise.all([
+                    queryInfluxDB(piecesQuery),
+                    queryInfluxDB(powerQuery),
+                    queryInfluxDB(alertsQuery)
+                ]);
+
+                // Update Plant Status
+                document.getElementById('plant-status').innerHTML = '<span class="status-online">🟢 ONLINE</span>';
+
+                // Update Pieces Count
+                const piecesCount = piecesData && piecesData.length > 0 ? piecesData[0]._value || 0 : 0;
                 document.getElementById('pieces-count').innerHTML = `<span class="status-info">${piecesCount}</span>`;
 
-                const alertsCount = Math.floor(Math.random() * 4);
+                // Update Alerts Count
+                const alertsCount = alertsData && alertsData.length > 0 ? alertsData.length : 0;
                 const alertsEl = document.getElementById('alerts-count');
                 if (alertsCount === 0) {
                     alertsEl.innerHTML = '<span class="status-online">0</span>';
@@ -490,54 +686,86 @@
                     alertsEl.innerHTML = `<span class="status-critical">${alertsCount}</span>`;
                 }
 
-                const totalPower = (Math.random() * 8 + 3).toFixed(1);
+                // Update Total Power
+                const totalPower = powerData && powerData.length > 0 ? (powerData[0]._value || 0).toFixed(1) : '0.0';
                 document.getElementById('total-power').innerHTML = `<span class="status-info">${totalPower}</span>`;
-
-                updateConnectionStatus(true);
 
             } catch (error) {
                 console.error('Error updating KPIs:', error);
-                showError('Errore aggiornamento KPI');
+                showError('Errore query InfluxDB per KPI');
             }
         }
 
         /**
-         * Update temperature chart
+         * DEBUG: Update temperature chart to show ALL fields
          */
         async function updateTemperatureChart() {
             try {
                 if (!charts.temperature) return;
 
-                const machines = ['Milling1', 'Milling2', 'Lathe1', 'Saw1'];
-                const now = new Date();
-                const labels = [];
+                // DEBUG: Query ALL fields to see what we have
+                const debugQuery = `
+                    from(bucket:"${CONFIG.influxdb.bucket}")
+                    |> range(start: -30m)
+                    |> filter(fn: (r) => r._measurement == "sensor_data")
+                    |> aggregateWindow(every: 2m, fn: mean, createEmpty: false)
+                    |> pivot(rowKey:["_time"], columnKey: ["_field", "machine"], valueColumn: "_value")
+                `;
 
-                // Generate time labels
-                for (let i = 9; i >= 0; i--) {
-                    const time = new Date(now.getTime() - i * 60000);
-                    labels.push(time.toLocaleTimeString('it-IT', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }));
+                console.log("🔍 DEBUG: Querying all sensor data fields...");
+                const tempData = await queryInfluxDB(debugQuery);
+
+                if (!tempData || tempData.length === 0) {
+                    document.getElementById('tempChart').style.display = 'none';
+                    document.getElementById('tempChartNoData').style.display = 'flex';
+                    console.log("❌ No sensor data found");
+                    return;
                 }
 
-                const datasets = machines.map((machine, index) => {
-                    const colors = ['#48bb78', '#ed8936', '#4299e1', '#9f7aea'];
-                    const baseTemp = 45 + index * 10;
-                    const data = labels.map(() => {
-                        const variation = Math.sin(Date.now() / 100000 + index) * 10;
-                        return Math.max(20, baseTemp + variation + (Math.random() - 0.5) * 10);
-                    });
+                console.log("🔍 DEBUG: Raw sensor data:", tempData[0]);
+                console.log("🔍 DEBUG: Available columns:", Object.keys(tempData[0]));
 
-                    return {
-                        label: machine,
-                        data: data,
-                        borderColor: colors[index % colors.length],
-                        backgroundColor: colors[index % colors.length] + '20',
-                        tension: 0.4,
-                        borderWidth: 3
-                    };
+                document.getElementById('tempChart').style.display = 'block';
+                document.getElementById('tempChartNoData').style.display = 'none';
+
+                // Extract temperature-like fields
+                const allKeys = Object.keys(tempData[0]);
+                const tempFields = allKeys.filter(key =>
+                    key.includes('temperature') ||
+                    key.includes('temp') ||
+                    (key.includes('_') && !['_time', 'result', 'table'].includes(key) &&
+                        tempData[0][key] && tempData[0][key] < 200) // Realistic temp values
+                );
+
+                console.log("🔍 DEBUG: Temperature-like fields:", tempFields);
+
+                // If no temperature fields, show first numeric field for debugging
+                let fieldsToShow = tempFields;
+                if (fieldsToShow.length === 0) {
+                    fieldsToShow = allKeys.filter(key =>
+                        !['_time', 'result', 'table'].includes(key) &&
+                        typeof tempData[0][key] === 'number'
+                    ).slice(0, 4); // Max 4 fields
+                    console.log("⚠️ No temperature fields, showing:", fieldsToShow);
+                }
+
+                const labels = tempData.map(row => {
+                    const date = new Date(row._time);
+                    return date.toLocaleTimeString('it-IT', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
                 });
+
+                const colors = ['#48bb78', '#ed8936', '#4299e1', '#9f7aea'];
+                const datasets = fieldsToShow.map((field, index) => ({
+                    label: field,
+                    data: tempData.map(row => row[field] || null),
+                    borderColor: colors[index % colors.length],
+                    backgroundColor: colors[index % colors.length] + '20',
+                    tension: 0.4,
+                    borderWidth: 3
+                }));
 
                 charts.temperature.data.labels = labels;
                 charts.temperature.data.datasets = datasets;
@@ -549,28 +777,41 @@
         }
 
         /**
-         * Update power chart
+         * Update power chart with REAL data only
          */
         async function updatePowerChart() {
             try {
                 if (!charts.power) return;
 
-                const now = new Date();
-                const labels = [];
-                const values = [];
+                const powerQuery = `
+                    from(bucket:"${CONFIG.influxdb.bucket}")
+                    |> range(start: -30m)
+                    |> filter(fn: (r) => r._measurement == "sensor_data")
+                    |> filter(fn: (r) => r._field == "power")
+                    |> aggregateWindow(every: 2m, fn: sum, createEmpty: false)
+                `;
 
-                for (let i = 9; i >= 0; i--) {
-                    const time = new Date(now.getTime() - i * 60000);
-                    labels.push(time.toLocaleTimeString('it-IT', {
+                const powerData = await queryInfluxDB(powerQuery);
+
+                if (!powerData || powerData.length === 0) {
+                    // No power data
+                    document.getElementById('powerChart').style.display = 'none';
+                    document.getElementById('powerChartNoData').style.display = 'flex';
+                    return;
+                }
+
+                document.getElementById('powerChart').style.display = 'block';
+                document.getElementById('powerChartNoData').style.display = 'none';
+
+                const labels = powerData.map(row => {
+                    const date = new Date(row._time);
+                    return date.toLocaleTimeString('it-IT', {
                         hour: '2-digit',
                         minute: '2-digit'
-                    }));
-                    
-                    // Simulate realistic power consumption
-                    const basePower = 5;
-                    const variation = Math.sin(Date.now() / 80000) * 2;
-                    values.push((basePower + variation + Math.random()).toFixed(1));
-                }
+                    });
+                });
+
+                const values = powerData.map(row => row._value || 0);
 
                 charts.power.data.labels = labels;
                 charts.power.data.datasets = [{
@@ -591,24 +832,35 @@
         }
 
         /**
-         * Update machine status
+         * Update machine status with REAL data only
          */
         async function updateMachineStatus() {
             try {
-                const machines = [
-                    { name: 'Milling1', baseTemp: 45, basePower: 2.3 },
-                    { name: 'Milling2', baseTemp: 52, basePower: 3.1 },
-                    { name: 'Lathe1', baseTemp: 38, basePower: 1.8 },
-                    { name: 'Saw1', baseTemp: 28, basePower: 0.8 }
-                ];
+                const machineQuery = `
+                    from(bucket:"${CONFIG.influxdb.bucket}")
+                    |> range(start: -5m)
+                    |> filter(fn: (r) => r._measurement == "sensor_data")
+                    |> filter(fn: (r) => r._field == "temperature" or r._field == "power")
+                    |> group(columns: ["machine", "_field"])
+                    |> last()
+                    |> pivot(rowKey:["machine"], columnKey: ["_field"], valueColumn: "_value")
+                `;
+
+                const machineData = await queryInfluxDB(machineQuery);
 
                 const machineGrid = document.getElementById('machineGrid');
                 machineGrid.innerHTML = '';
 
-                for (const machine of machines) {
-                    // Simulate realistic variations
-                    const temp = machine.baseTemp + (Math.random() - 0.5) * 20;
-                    const power = Math.max(0.1, machine.basePower + (Math.random() - 0.5) * 1.5);
+                if (!machineData || machineData.length === 0) {
+                    machineGrid.innerHTML = '<div class="no-data-message">📊 Nessun dato macchine disponibile</div>';
+                    return;
+                }
+
+                for (const machine of machineData) {
+                    if (!machine.machine) continue;
+
+                    const temp = machine.temperature || 0;
+                    const power = machine.power || 0;
 
                     let statusClass = 'online';
                     let statusText = '🟢 Operativa';
@@ -622,7 +874,7 @@
                         statusClass = 'warning';
                         statusText = '🟡 Attenzione';
                         tempClass = 'status-warning';
-                    } else if (power < 0.2) {
+                    } else if (power < 0.1) {
                         statusClass = 'offline';
                         statusText = '⚫ Idle';
                         tempClass = 'status-info';
@@ -632,7 +884,7 @@
                     machineCard.className = `machine-card ${statusClass} fade-in`;
                     machineCard.innerHTML = `
                         <div class="machine-header">
-                            <div class="machine-name">${machine.name}</div>
+                            <div class="machine-name">${machine.machine}</div>
                         </div>
                         <div class="machine-metrics">
                             <div class="metric">
@@ -662,11 +914,15 @@
             const statusEl = document.getElementById('connectionStatus');
             isConnected = connected;
 
-            if (connected) {
-                statusEl.className = 'connection-status';
-                statusEl.innerHTML = '🟢 Connesso';
+            if (connected && hasRealData) {
+                statusEl.className = 'connection-status connected';
+                statusEl.innerHTML = '🟢 Connesso - Dati Real-time';
+            } else if (connected && !hasRealData) {
+                statusEl.className = 'connection-status no-data';
+                statusEl.innerHTML = '🟡 Connesso - Nessun dato';
             } else {
-                statusEl.innerHTML = `🔴 ${message || 'Disconnesso'}`;
+                statusEl.className = 'connection-status error';
+                statusEl.innerHTML = `🔴 ${message || 'Errore connessione'}`;
             }
         }
 
@@ -687,12 +943,15 @@
         }
 
         /**
-         * Update all data
+         * Update all data - REAL DATA ONLY
          */
         async function updateAllData() {
             try {
                 clearErrors();
 
+                console.log('📊 Updating all data from InfluxDB...');
+
+                // Update all sections with real data
                 await Promise.all([
                     updateKPIs(),
                     updateTemperatureChart(),
@@ -700,17 +959,19 @@
                     updateMachineStatus()
                 ]);
 
-                updateConnectionStatus(true);
                 lastUpdateTime = new Date();
-
                 document.getElementById('last-update').textContent =
                     lastUpdateTime.toLocaleTimeString('it-IT');
 
-                console.log('📊 Data updated successfully');
+                if (hasRealData) {
+                    console.log('✅ Real data updated successfully');
+                } else {
+                    console.log('⚠️ No real data available');
+                }
 
             } catch (error) {
-                console.error('Error updating data:', error);
-                showError('Errore aggiornamento dati');
+                console.error('❌ Error updating data:', error);
+                showError('Errore connessione InfluxDB');
             }
         }
 
@@ -719,4 +980,5 @@
 
     </script>
 </body>
+
 </html>
